@@ -7,6 +7,7 @@ not installed.
 
 from __future__ import annotations
 
+import math
 import time
 from pathlib import Path
 from typing import Any
@@ -83,6 +84,7 @@ class AudioMixer(BaseTool):
                             "default": 1.0,
                         },
                         "start_seconds": {"type": "number", "minimum": 0},
+                        "duration_seconds": {"type": "number", "exclusiveMinimum": 0},
                         "fade_in_seconds": {"type": "number", "minimum": 0},
                         "fade_out_seconds": {"type": "number", "minimum": 0},
                     },
@@ -106,12 +108,43 @@ class AudioMixer(BaseTool):
             },
             "duck_level": {
                 "type": "number",
+                "minimum": -80,
+                "maximum": 0,
                 "description": (
-                    "Ducking attenuation in dB for the secondary track (duck operation, "
-                    "simple format). Negative values reduce volume, e.g. -12 means duck "
-                    "by 12dB. Converted to a linear ratio internally. Default: -12."
+                    "Music attenuation in dB for duck or full_mix. Converted to "
+                    "music_volume_during_speech before the existing sidechain and "
+                    "level compensation; this is not a guaranteed measured reduction. "
+                    "In full_mix, conflicts with an explicit linear music level are rejected. "
+                    "If omitted, full_mix retains its existing linear default of 0.15."
                 ),
                 "default": -12,
+            },
+            "narration_gain_db": {
+                "type": "number", "minimum": -60, "maximum": 30, "default": 0,
+                "description": "full_mix: gain applied to each speech track before mixing.",
+            },
+            "master_gain_db": {
+                "type": "number", "minimum": -60, "maximum": 30, "default": 0,
+                "description": (
+                    "full_mix: final gain after mixing and optional loudnorm. "
+                    "Use normalize=false to preserve an approved manual balance. "
+                    "Positive gain requires checking output peaks for clipping."
+                ),
+            },
+            "peak_limit_db": {
+                "type": "number", "minimum": -12, "maximum": 0,
+                "description": (
+                    "Optional output sample-peak ceiling applied after master gain. "
+                    "Omit to preserve legacy output levels."
+                ),
+            },
+            "preserve_speech_volume": {
+                "type": "boolean", "default": False,
+                "description": (
+                    "full_mix: sum scheduled narration segments at unity "
+                    "instead of dividing speech by the segment count. Enable for long "
+                    "documentaries; overlapping narration is additive."
+                ),
             },
             "input_path": {"type": "string", "description": "Input for extract operation"},
             "output_path": {"type": "string"},
@@ -196,7 +229,11 @@ class AudioMixer(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=2, ram_mb=1024, vram_mb=0, disk_mb=500)
-    idempotency_key_fields = ["operation", "tracks", "ducking"]
+    idempotency_key_fields = [
+        "operation", "tracks", "ducking", "duck_level", "narration_gain_db",
+        "master_gain_db", "peak_limit_db", "normalize", "loudnorm_target", "target_duration",
+        "preserve_speech_volume",
+    ]
     side_effects = ["writes mixed audio file to output_path"]
     user_visible_verification = [
         "Listen to mixed output and verify speech clarity and music ducking",
@@ -235,6 +272,13 @@ class AudioMixer(BaseTool):
         fade_in = track.get("fade_in_seconds", 0)
         fade_out = track.get("fade_out_seconds", 0)
 
+        duration_limit = track.get("duration_seconds")
+        if duration_limit is not None:
+            duration_limit = float(duration_limit)
+            if not math.isfinite(duration_limit) or duration_limit <= 0:
+                raise ValueError("track duration_seconds must be finite and positive")
+            filters.append(f"atrim=duration={duration_limit}")
+            filters.append("asetpts=PTS-STARTPTS")
         if volume != 1.0:
             filters.append(f"volume={volume}")
         if fade_in > 0:
@@ -247,6 +291,8 @@ class AudioMixer(BaseTool):
                 track["path"],
             ]
             duration = float(self.run_command(duration_cmd).stdout.strip().split("\n")[0])
+            if duration_limit is not None:
+                duration = min(duration, duration_limit)
             fade_start = max(0.0, duration - float(fade_out))
             filters.append(f"afade=t=out:st={fade_start}:d={fade_out}")
         if delay_ms > 0:
@@ -504,10 +550,30 @@ class AudioMixer(BaseTool):
         if not tracks:
             return ToolResult(success=False, error="No tracks provided for full_mix")
 
+        # Gain is opt-in: old calls retain exactly the same filter graph. Work
+        # on copies so repeat calls cannot accumulate gain or mutate artifacts.
+        narration_gain = self._finite_level(inputs, "narration_gain_db", 0, -60, 30)
+        master_gain = self._finite_level(inputs, "master_gain_db", 0, -60, 30)
+        peak_limit = None
+        if inputs.get("peak_limit_db") is not None:
+            peak_limit = self._finite_level(inputs, "peak_limit_db", -1, -12, 0)
+        ducking = inputs.get("ducking", {"enabled": True})
+        if "duck_level" in inputs:
+            duck_level = self._finite_level(inputs, "duck_level", -12, -80, 0)
+            duck_params = dict(ducking) if isinstance(ducking, dict) else {"enabled": bool(ducking)}
+            if "music_volume_during_speech" in duck_params:
+                return ToolResult(
+                    success=False,
+                    error="Specify duck_level OR ducking.music_volume_during_speech, not both",
+                )
+            # full_mix keeps a historical x3 compensation below. Divide it out
+            # here so the new dB API expresses the requested linear attenuation.
+            duck_params["music_volume_during_speech"] = round(10 ** (duck_level / 20) / 3, 6)
+            ducking = duck_params
+
         output_path = Path(inputs.get("output_path", "full_mix_output.wav"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
         normalize = inputs.get("normalize", True)
-        ducking = inputs.get("ducking", {"enabled": True})
         target_duration = inputs.get("target_duration")
         target: float | None = None
         if target_duration is not None:
@@ -515,8 +581,8 @@ class AudioMixer(BaseTool):
                 target = float(target_duration)
             except (TypeError, ValueError):
                 return ToolResult(success=False, error="target_duration must be a positive number")
-            if target <= 0:
-                return ToolResult(success=False, error="target_duration must be greater than zero")
+            if not math.isfinite(target) or target <= 0:
+                return ToolResult(success=False, error="target_duration must be finite and greater than zero")
 
         speech_tracks = [t for t in tracks if t.get("role") in ("speech", "primary")]
         music_tracks = [t for t in tracks if t.get("role") in ("music", "secondary")]
@@ -538,6 +604,8 @@ class AudioMixer(BaseTool):
         for i, track in enumerate(all_tracks):
             input_args.extend(["-i", track["path"]])
             filters = self._track_filters(track)
+            if track.get("role") in ("speech", "primary") and narration_gain:
+                filters.append(f"volume={narration_gain}dB")
 
             if filters:
                 filter_chain = ",".join(filters)
@@ -559,8 +627,10 @@ class AudioMixer(BaseTool):
             speech_labels = "".join(f"[a{i}]" for i in speech_indices)
 
             if len(speech_tracks) > 1:
+                speech_normalization = ":normalize=0" if inputs.get("preserve_speech_volume", False) else ""
                 filter_parts.append(
-                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest[speech_all]"
+                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest"
+                    f"{speech_normalization}[speech_all]"
                 )
             else:
                 filter_parts.append(f"[a{speech_indices[0]}]acopy[speech_all]")
@@ -615,9 +685,20 @@ class AudioMixer(BaseTool):
 
         else:
             # No ducking: simple amix of all tracks
-            all_labels = "".join(f"[a{i}]" for i in range(len(all_tracks)))
+            mix_count = len(all_tracks)
+            if inputs.get("preserve_speech_volume", False) and len(speech_tracks) > 1:
+                speech_labels = "".join(f"[a{i}]" for i in range(len(speech_tracks)))
+                filter_parts.append(
+                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest:normalize=0[speech_sum]"
+                )
+                all_labels = "[speech_sum]" + "".join(
+                    f"[a{i}]" for i in range(len(speech_tracks), len(all_tracks))
+                )
+                mix_count = 1 + len(all_tracks) - len(speech_tracks)
+            else:
+                all_labels = "".join(f"[a{i}]" for i in range(len(all_tracks)))
             filter_parts.append(
-                f"{all_labels}amix=inputs={len(all_tracks)}:duration=longest:dropout_transition=2[premix]"
+                f"{all_labels}amix=inputs={mix_count}:duration=longest:dropout_transition=2[premix]"
             )
 
         # A ducked music stream is gated by the speech sidechain, so its tail
@@ -638,6 +719,19 @@ class AudioMixer(BaseTool):
             out_label = "[out]"
         else:
             out_label = f"[{premix_label}]"
+
+        if master_gain:
+            filter_parts.append(f"{out_label}volume={master_gain}dB[master_out]")
+            out_label = "[master_out]"
+
+        # Opt-in peak protection is placed after loudness normalization and
+        # master gain so neither approved gain value is silently reduced.
+        if peak_limit is not None:
+            linear_ceiling = 10 ** (peak_limit / 20)
+            filter_parts.append(
+                f"{out_label}alimiter=limit={linear_ceiling:.8f}:level=false:latency=true[peak_limited]"
+            )
+            out_label = "[peak_limited]"
 
         filter_complex = ";".join(p for p in filter_parts if p)
 
@@ -660,11 +754,28 @@ class AudioMixer(BaseTool):
                 "sfx_tracks": len(sfx_tracks),
                 "ducking_enabled": duck_enabled,
                 "normalized": normalize,
+                "narration_gain_db": narration_gain,
+                "master_gain_db": master_gain,
+                "peak_limit_db": peak_limit,
+                "preserve_speech_volume": inputs.get("preserve_speech_volume", False),
+                "duck_level": inputs.get("duck_level"),
+                "ducking": ducking,
                 "target_duration": target_duration,
                 "output": str(output_path),
             },
             artifacts=[str(output_path)],
         )
+
+    @staticmethod
+    def _finite_level(inputs: dict[str, Any], key: str, default: float,
+                      minimum: float, maximum: float) -> float:
+        try:
+            value = float(inputs.get(key, default))
+        except (TypeError, ValueError):
+            raise ValueError(f"{key} must be a finite number from {minimum} to {maximum}") from None
+        if not math.isfinite(value) or not minimum <= value <= maximum:
+            raise ValueError(f"{key} must be a finite number from {minimum} to {maximum}")
+        return value
 
     def _segmented_music(self, inputs: dict[str, Any]) -> ToolResult:
         """Mix background music into a video only during specified time segments.
