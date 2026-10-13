@@ -256,13 +256,13 @@ class OpenMontageStudio(tk.Tk):
 
     def _build_create_mode(self, page: ttk.Frame) -> None:
         ttk.Label(page, text="Criar vídeo do zero", style="Section.TLabel").pack(anchor="w")
-        ttk.Label(page, text="Prepare o tema e o texto da narração. O painel ao lado gera e mixa áudio local. Monte imagens e clipes locais com um WAV na montagem manual; roteiro automático e pesquisa de mídia ainda não estão integrados.", style="Card.TLabel", wraplength=610, justify="left").pack(anchor="w", pady=(10, 12))
+        ttk.Label(page, text="Prepare o tema e o texto da narração. O painel ao lado gera e mixa áudio local. Monte imagens e clipes locais com um WAV na montagem manual; roteiro automático e pesquisa de mídia ainda não estão integrados. A montagem também aceita e salva planos scenes.json.", style="Card.TLabel", wraplength=610, justify="left").pack(anchor="w", pady=(10, 12))
         ttk.Label(page, text="Cole ou escreva o texto que será narrado no campo Texto da narração, no painel Áudio.", style="Card.TLabel", wraplength=610).pack(anchor="w")
         ttk.Button(page, text="Abrir montagem local e exportar MP4", command=self._open_timeline).pack(anchor="w", pady=14)
 
     def _build_edit_mode(self, page: ttk.Frame) -> None:
         ttk.Label(page, text="Selecionar vídeo bruto", style="Section.TLabel").pack(anchor="w")
-        ttk.Label(page, text="Escolha um arquivo para registrar a origem do projeto. Esta etapa não analisa, copia, altera nem exclui o vídeo selecionado.", style="Card.TLabel", wraplength=610, justify="left").pack(anchor="w", pady=(10, 12))
+        ttk.Label(page, text="Escolha um arquivo para registrar a origem do projeto. Esta etapa não analisa, copia, altera nem exclui o vídeo selecionado. O arquivo selecionado pode ser levado à montagem manual e a um plano scenes.json.", style="Card.TLabel", wraplength=610, justify="left").pack(anchor="w", pady=(10, 12))
         self.source_video = tk.StringVar(value="")
         self._field(page, "Arquivo original (somente leitura)", self._path_entry(page, self.source_video, self._browse_source_video))
         self.source_info = ttk.Label(page, text="Nenhum arquivo selecionado.", style="Card.TLabel", wraplength=610)
@@ -273,7 +273,7 @@ class OpenMontageStudio(tk.Tk):
     def _build_custom_mode(self, page: ttk.Frame) -> None:
         ttk.Label(page, text="Produção personalizada", style="Section.TLabel").pack(anchor="w")
         ttk.Label(page, text="Configure separadamente os parâmetros preparatórios acima. A duração em horas, minutos e segundos é uma meta de planejamento; o fluxo atual de áudio usa a duração efetiva da narração.", style="Card.TLabel", wraplength=610, justify="left").pack(anchor="w", pady=(10, 12))
-        ttk.Label(page, text="Integrado: voz Kokoro em inglês, música local, mixagem e montagem manual de imagens/clipes com WAV e exportação MP4. Idiomas adicionais, legendas e estilos aplicados permanecem preparatórios. A montagem tem suas próprias durações e usa o WAV como referência.", style="Card.TLabel", wraplength=610, justify="left").pack(anchor="w")
+        ttk.Label(page, text="Integrado: voz Kokoro em inglês, música local, mixagem e montagem manual de imagens/clipes com WAV e exportação MP4. Idiomas adicionais, legendas e estilos aplicados permanecem preparatórios. A montagem tem suas próprias durações e usa o WAV como referência; planos scenes.json importam e exportam a montagem completa.", style="Card.TLabel", wraplength=610, justify="left").pack(anchor="w")
         ttk.Button(page, text="Configurar timeline e exportar MP4", command=self._open_timeline).pack(anchor="w", pady=14)
 
     def _open_timeline(self) -> TimelineEditor:

@@ -11,6 +11,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
+from lib.studio_scenes import load_scenes, save_scenes, scenes_to_items
 from lib.studio_timeline import (
     APPROVED_WAV, FPS, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS,
     TimelineItem, fit_to_audio, move_item, seconds_to_frames, timeline_frames,
@@ -71,6 +72,10 @@ class TimelineEditor(tk.Toplevel):
         self._button(actions, "Subir", lambda: self.move_selected(-1))
         self._button(actions, "Descer", lambda: self.move_selected(1))
         self._button(actions, "Ajustar ao WAV", self.adjust_to_wav)
+        plan_row = ttk.Frame(body)
+        plan_row.pack(fill="x", pady=(0, 8))
+        self._button(plan_row, "Importar plano (scenes.json)…", self.import_plan)
+        self._button(plan_row, "Exportar plano (scenes.json)…", self.export_plan)
 
         table = ttk.Frame(body)
         table.pack(fill="both", expand=True)
@@ -111,7 +116,8 @@ class TimelineEditor(tk.Toplevel):
         ttk.Label(body, textvariable=self.summary, wraplength=950).pack(anchor="w")
         ttk.Label(body, text="As transições sobrepõem os itens e reduzem a duração total; a última não é aplicada. "
                   "Clipes começam no início: são cortados ou mantêm o último quadro. Áudios dos clipes são ignorados. "
-                  "Imagens mantêm proporção, com barras pretas quando necessário. O WAV não recebe novos ganhos ou efeitos.",
+                  "Imagens mantêm proporção, com barras pretas quando necessário. O WAV não recebe novos ganhos ou efeitos. "
+                  "Planos scenes.json importam/exportam a montagem inteira sem tocar no áudio.",
                   wraplength=980, justify="left").pack(anchor="w", pady=(8, 10))
 
         footer = ttk.Frame(body)
@@ -140,6 +146,65 @@ class TimelineEditor(tk.Toplevel):
             ("Imagens e vídeos", " ".join("*" + ext for ext in sorted(IMAGE_EXTENSIONS | VIDEO_EXTENSIONS))),))
         if chosen:
             self.add_paths(chosen)
+
+    def import_plan(self):
+        if self.busy:
+            return
+        chosen = filedialog.askopenfilename(
+            parent=self, title="Importar scenes.json",
+            filetypes=(("Plano de cenas", "*.json"), ("Todos", "*.*")))
+        if not chosen:
+            return
+        try:
+            plan = load_scenes(chosen)
+        except ValueError as exc:
+            messagebox.showerror("Plano inválido", str(exc), parent=self)
+            return
+        current_wav = Path(self.wav_path.get()).expanduser().resolve()
+        if plan.wav is not None and plan.wav != current_wav:
+            swap = messagebox.askyesno(
+                "Trocar WAV do plano?",
+                f"O plano referencia outro WAV:\n{plan.wav}\n\n"
+                f"WAV ativo:\n{current_wav}\n\n"
+                "Trocar o WAV ativo pelo do plano? A mixagem aprovada permanece em disco; "
+                "esta escolha só altera qual WAV a montagem usa.",
+                parent=self)
+            if swap:
+                self.wav_path.set(str(plan.wav))
+        if self.items:
+            replace_all = messagebox.askyesno(
+                "Substituir timeline?",
+                f"O plano contém {len(plan.scenes)} cena(s) e substituirá os "
+                f"{len(self.items)} item(ns) atuais. Continuar?",
+                parent=self)
+            if not replace_all:
+                self.status.set("Importação cancelada. A timeline foi preservada.")
+                return
+        self.items = scenes_to_items(plan)
+        self._refresh(0)
+        self.status.set(f"Plano importado: {len(self.items)} cena(s). Ajustando ao WAV…")
+        self.wav_info.set("Plano importado. Ajustando a timeline ao WAV ativo…")
+        self.adjust_to_wav()
+
+    def export_plan(self):
+        if self.busy:
+            return
+        if not self.items:
+            messagebox.showerror("Timeline vazia", "Adicione mídias antes de exportar o plano.", parent=self)
+            return
+        chosen = filedialog.asksaveasfilename(
+            parent=self, title="Exportar plano de cenas", defaultextension=".json",
+            initialdir=str(self.output_dir), initialfile=f"cenas-{datetime.now():%Y%m%d-%H%M%S-%f}.json",
+            filetypes=(("Plano de cenas", "*.json"),), confirmoverwrite=True)
+        if not chosen:
+            return
+        try:
+            path = save_scenes(chosen, self.items, wav=self.wav_path.get(),
+                               metadata={"generated_by": "OpenMontage Studio"})
+        except (OSError, ValueError) as exc:
+            messagebox.showerror("Não foi possível exportar o plano", str(exc), parent=self)
+            return
+        self.status.set(f"Plano exportado: {path}")
 
     def add_paths(self, paths):
         if self.busy:
