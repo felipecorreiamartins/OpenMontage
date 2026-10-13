@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from lib import studio_timeline_ui as ui
+from lib.studio_scene_generator import generate_plan_file
 from lib.studio_scenes import load_scenes, scenes_to_items
 from lib.studio_timeline import APPROVED_WAV, TimelineItem, timeline_frames
 from openmontage_studio import OpenMontageStudio
@@ -282,3 +283,42 @@ def test_export_plan_empty_timeline_is_rejected(studio, monkeypatch):
     monkeypatch.setattr(ui.filedialog, "asksaveasfilename", lambda **kwargs: pytest.fail("no dialog expected"))
     editor.export_plan()
     assert errors and "Timeline vazia" in errors[0][0]
+
+
+def test_generate_plan_from_narration_writes_planning_only_file(studio, tmp_path):
+    app, errors = studio
+    editor = app._open_timeline()
+    editor.withdraw()
+    editor.output_dir = tmp_path
+    editor.generate_plan(
+        "A catedral foi construída no século dezoito.\n\n"
+        "Suas abóbadas guardam séculos de silêncio e luz.\n\n"
+        "Ao anoitecer, as velas devolvem o calor."
+    )
+    assert editor.busy
+    settle(app, editor)
+    assert not errors
+    assert editor.last_plan is not None and editor.last_plan.is_file()
+    plan = load_scenes(editor.last_plan)
+    assert plan.planning_count == len(plan.scenes) >= 3
+    assert all(entry.media is None for entry in plan.scenes)
+    assert scenes_to_items(plan) == []
+    assert "Plano gerado" in editor.status.get()
+    assert "media" in editor.status.get()
+
+
+def test_import_planning_only_plan_does_not_touch_timeline(studio, tmp_path, monkeypatch):
+    app, errors = studio
+    editor = app._open_timeline()
+    editor.withdraw()
+    keep = tmp_path / "keep.png"
+    keep.touch()
+    editor.items = [TimelineItem(keep, 1.0)]
+    plan_path = generate_plan_file(
+        "Primeira parte do documentário. Segunda parte com mais detalhes. Terceira parte finaliza.",
+        30.0, tmp_path / "planning.json")
+    monkeypatch.setattr(ui.filedialog, "askopenfilename", lambda **kwargs: str(plan_path))
+    editor.import_plan()
+    assert editor.items == [TimelineItem(keep, 1.0)]
+    assert errors and "planejamento" in errors[0][1].lower()
+    assert Path(editor.wav_path.get()).resolve() == APPROVED_WAV.resolve()

@@ -11,6 +11,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
+from lib.studio_scene_generator import generate_plan_file
 from lib.studio_scenes import load_scenes, save_scenes, scenes_to_items
 from lib.studio_timeline import (
     APPROVED_WAV, FPS, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS,
@@ -35,6 +36,7 @@ class TimelineEditor(tk.Toplevel):
         self.closing = False
         self.after_close = None
         self.last_output: Path | None = None
+        self.last_plan: Path | None = None
         self._controls = []
         self._poll_id = None
         self._build()
@@ -74,6 +76,7 @@ class TimelineEditor(tk.Toplevel):
         self._button(actions, "Ajustar ao WAV", self.adjust_to_wav)
         plan_row = ttk.Frame(body)
         plan_row.pack(fill="x", pady=(0, 8))
+        self._button(plan_row, "Gerar Plano…", self.open_plan_generator)
         self._button(plan_row, "Importar plano (scenes.json)…", self.import_plan)
         self._button(plan_row, "Exportar plano (scenes.json)…", self.export_plan)
 
@@ -147,6 +150,63 @@ class TimelineEditor(tk.Toplevel):
         if chosen:
             self.add_paths(chosen)
 
+    def open_plan_generator(self):
+        if self.busy:
+            return
+        dialog = tk.Toplevel(self)
+        dialog.title("Gerar plano de cenas")
+        dialog.geometry("680x440")
+        dialog.minsize(520, 320)
+        dialog.transient(self)
+        dialog.grab_set()
+        ttk.Label(dialog, text="Texto da narração (segmentos viram cenas de planejamento)",
+                  style="Section.TLabel").pack(anchor="w", padx=14, pady=(14, 6))
+        body = ttk.Frame(dialog)
+        body.pack(fill="both", expand=True, padx=14)
+        text = tk.Text(body, wrap="word", bg="#0f1720", fg="#e8eef5", insertbackground="white",
+                       relief="flat", padx=8, pady=6, font=("Segoe UI", 10))
+        scroll = ttk.Scrollbar(body, orient="vertical", command=text.yview)
+        text.configure(yscrollcommand=scroll.set)
+        scroll.pack(side="right", fill="y")
+        text.pack(side="left", fill="both", expand=True)
+        ttk.Label(dialog, text="As durações são proporcionais ao WAV ativo. Nenhuma mídia é inventada; "
+                               "preencha 'media' em cada cena e use Importar plano para montar o vídeo.",
+                  wraplength=620, justify="left").pack(anchor="w", padx=14, pady=(8, 4))
+        footer = ttk.Frame(dialog)
+        footer.pack(fill="x", padx=14, pady=(4, 14))
+
+        def cancel():
+            dialog.destroy()
+
+        def generate():
+            content = text.get("1.0", "end").strip()
+            if not content:
+                messagebox.showerror("Texto necessário", "Cole ou escreva o texto da narração.", parent=dialog)
+                return
+            dialog.destroy()
+            self.generate_plan(content)
+
+        ttk.Button(footer, text="Cancelar", command=cancel).pack(side="right", padx=(6, 0))
+        ttk.Button(footer, text="Gerar plano", style="Accent.TButton", command=generate).pack(side="right")
+        text.focus_set()
+
+    def generate_plan(self, narration_text: str):
+        if self.busy:
+            return
+        wav = Path(self.wav_path.get()).expanduser()
+        self.status.set("Gerando plano de cenas a partir da narração…")
+
+        def worker():
+            duration = wav_duration(wav)
+            if self.cancel_event.is_set():
+                return "cancelled", "Geração de plano cancelada."
+            destination = self.output_dir / f"plano-gerado-{datetime.now():%Y%m%d-%H%M%S-%f}.json"
+            path = generate_plan_file(narration_text, duration, destination, wav=wav)
+            plan = load_scenes(path)
+            return "plan_generated", (path, len(plan.scenes), duration)
+
+        self._start(worker)
+
     def import_plan(self):
         if self.busy:
             return
@@ -159,6 +219,16 @@ class TimelineEditor(tk.Toplevel):
             plan = load_scenes(chosen)
         except ValueError as exc:
             messagebox.showerror("Plano inválido", str(exc), parent=self)
+            return
+        planning = plan.planning_count
+        media_items = scenes_to_items(plan)
+        if not media_items:
+            messagebox.showerror(
+                "Plano de planejamento",
+                f"O plano tem {planning} cena(s) de planejamento sem 'media'. "
+                "Preencha os caminhos de mídia no JSON e importe novamente para montar o vídeo.",
+                parent=self)
+            self.status.set(f"Plano carregado: {planning} cena(s) de planejamento, sem mídia para montar.")
             return
         current_wav = Path(self.wav_path.get()).expanduser().resolve()
         if plan.wav is not None and plan.wav != current_wav:
@@ -174,15 +244,17 @@ class TimelineEditor(tk.Toplevel):
         if self.items:
             replace_all = messagebox.askyesno(
                 "Substituir timeline?",
-                f"O plano contém {len(plan.scenes)} cena(s) e substituirá os "
-                f"{len(self.items)} item(ns) atuais. Continuar?",
+                f"O plano contém {len(media_items)} cena(s) com mídia"
+                + (f" ({planning} de planejamento serão ignoradas)" if planning else "")
+                + f" e substituirá os {len(self.items)} item(ns) atuais. Continuar?",
                 parent=self)
             if not replace_all:
                 self.status.set("Importação cancelada. A timeline foi preservada.")
                 return
-        self.items = scenes_to_items(plan)
+        self.items = media_items
         self._refresh(0)
-        self.status.set(f"Plano importado: {len(self.items)} cena(s). Ajustando ao WAV…")
+        skipped = f" ({planning} cena(s) de planejamento sem mídia ignoradas)" if planning else ""
+        self.status.set(f"Plano importado: {len(self.items)} cena(s){skipped}. Ajustando ao WAV…")
         self.wav_info.set("Plano importado. Ajustando a timeline ao WAV ativo…")
         self.adjust_to_wav()
 
@@ -367,6 +439,12 @@ class TimelineEditor(tk.Toplevel):
                     self._refresh(0)
                     self.wav_info.set(f"WAV: {duration:.3f} s. Vídeo ajustado ao quadro seguinte, com diferença menor que 1/30 s.")
                     self.status.set("Timeline ajustada. Confira a ordem e exporte o MP4.")
+                elif kind == "plan_generated":
+                    path, scene_count, duration = payload
+                    self.last_plan = path
+                    self.status.set(
+                        f"Plano gerado: {scene_count} cena(s) para WAV de {duration:.3f} s → {path.name}. "
+                        "Preencha 'media' e use Importar plano.")
                 elif kind == "exported":
                     pass
                 elif kind == "cancelled":

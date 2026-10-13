@@ -5,7 +5,7 @@ import pytest
 
 from lib.studio_scenes import (
     DEFAULT_DURATION_SECONDS, SCENES_VERSION, SceneEntry, ScenePlan,
-    load_scenes, quantize_items, save_scenes, scenes_to_items,
+    load_scenes, quantize_items, save_plan, save_scenes, scenes_to_items,
 )
 from lib.studio_timeline import (
     FPS, TimelineItem, audio_frames, fit_to_audio, timeline_frames,
@@ -112,7 +112,7 @@ def test_invalid_plan_envelope_is_rejected(tmp_path, mutation, expected):
 
 @pytest.mark.parametrize("scene_mutation,expected", [
     ({"id": ""}, "'id' precisa ser"),
-    ({"media": ""}, "'media' precisa ser"),
+    ({"media": 5}, "'media' precisa ser"),
     ({"media": str(Path("missing-file.mp4"))}, "arquivo de mídia não encontrado"),
     ({"duration_seconds": 0}, "maior que zero"),
     ({"duration_seconds": -2}, "maior que zero"),
@@ -122,6 +122,7 @@ def test_invalid_plan_envelope_is_rejected(tmp_path, mutation, expected):
     ({"transition": "wipe"}, "transição desconhecida"),
     ({"transition_duration": 0}, "maior que zero"),
     ({"note": 3}, "'note' precisa ser texto"),
+    ({"narration": 3}, "'narration' precisa ser texto"),
     ({"surprise": 1}, "chave desconhecida"),
 ])
 def test_invalid_scene_is_rejected_with_position_and_id(tmp_path, scene_mutation, expected):
@@ -240,3 +241,45 @@ def test_plan_dataclasses_are_constructible_directly():
     plan = ScenePlan(scenes=(entry,), title="t")
     assert plan.version == SCENES_VERSION
     assert scenes_to_items(plan) == [TimelineItem(Path("a.mp4"), 1.0, "cut", 0.5)]
+
+
+def test_planning_scene_without_media_is_valid_and_skipped_by_default(tmp_path):
+    data = {
+        "version": SCENES_VERSION,
+        "scenes": [
+            {"id": "planejada", "duration_seconds": 3, "note": "Planejar imagem", "narration": "Era uma vez."},
+            {"id": "com-media", "media": str(media_file(tmp_path, "real.mp4")), "duration_seconds": 2},
+        ],
+    }
+    plan = load_scenes(write_plan(tmp_path, data))
+    assert plan.scenes[0].media is None
+    assert plan.scenes[0].narration == "Era uma vez."
+    assert plan.planning_count == 1
+    items = scenes_to_items(plan)
+    assert [item.path.name for item in items] == ["real.mp4"]
+
+
+def test_include_planning_raises_for_media_less_scenes(tmp_path):
+    plan = ScenePlan(scenes=(SceneEntry(id="p", media=None, duration=1.0),))
+    with pytest.raises(ValueError, match="não tem 'media'"):
+        scenes_to_items(plan, include_planning=True)
+
+
+def test_save_plan_roundtrips_planning_scenes_without_inventing_media(tmp_path):
+    plan = ScenePlan(
+        scenes=(
+            SceneEntry(id="cena-01", media=None, duration=4.0, transition="cut",
+                       note="Planejar imagem/clipe para: …", narration="Abertura do documentário."),
+            SceneEntry(id="cena-02", media=media_file(tmp_path, "ok.png"), duration=2.0,
+                       transition="fade", narration="Meio."),
+        ),
+        title="Documentário",
+        metadata={"generated_by": "unit-test"},
+    )
+    path = save_plan(tmp_path / "planning.json", plan)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert "media" not in data["scenes"][0]
+    assert data["scenes"][0]["narration"] == "Abertura do documentário."
+    reloaded = load_scenes(path)
+    assert reloaded.planning_count == 1
+    assert scenes_to_items(reloaded) == [TimelineItem(plan.scenes[1].media, 2.0, "fade", 0.5)]

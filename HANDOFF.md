@@ -1,4 +1,4 @@
-# HANDOFF — OpenMontage Studio (Etapa 4)
+# HANDOFF — OpenMontage Studio (Etapa 5)
 
 Documento de transferência do estado atual do **OpenMontage Studio**, o fluxo local do OpenMontage para automatizar documentários de 8–20 minutos para o YouTube, com narração/mixagem aprovadas e montagem não destrutiva.
 
@@ -10,6 +10,7 @@ O Studio é uma aplicação Tkinter isolada do pipeline orquestrado (`pipeline_d
 
 - **Áudio local:** narração Kokoro (inglês) + seleção de música por catálogo local + mixagem com perfil aprovado fixo.
 - **Montagem local:** timeline por quadros (30 fps, 1080p), transições cut/crossfade/fade, encaixe exato no WAV via `Ajustar ao WAV`, exportação MP4 H.264/AAC com verificação.
+- **Gerador de plano:** a partir do texto da narração, cria um `scenes.json` de planejamento (cenas sem `media`) com durações proporcionais ao WAV aprovado.
 - **WAV aprovado (somente leitura):** `D:\Youtube-Automacao\Audios\audio_final_documentario.wav`
   - sha256 `82808d024b02236e0eff891ff74d6d05879715e3e1bc13c2f667869dbe80692c`
   - 181 278 bytes
@@ -21,7 +22,7 @@ Arquitetura de referência: `AGENT_GUIDE.md`, `PROJECT_CONTEXT.md`.
 
 ## 2. Funcionalidades concluídas
 
-### Etapa 3 (já em checkpoint `ff9dbd2`)
+### Etapa 3 (checkpoint `ff9dbd2`)
 
 | Área | Status |
 |------|--------|
@@ -34,7 +35,7 @@ Arquitetura de referência: `AGENT_GUIDE.md`, `PROJECT_CONTEXT.md`.
 | Exportador MP4 verificado (`tools/video/studio_export.py`) | concluído |
 | QA Stage 3 reprodutível | concluído |
 
-### Etapa 4 (este commit)
+### Etapa 4 (commit `cc5639f`)
 
 | Área | Arquivo | Status |
 |------|---------|--------|
@@ -49,14 +50,28 @@ Arquitetura de referência: `AGENT_GUIDE.md`, `PROJECT_CONTEXT.md`.
 | Testes de UI de import/export/round-trip/WAV (6 novos) | `tests/test_studio_timeline_ui.py` | alterado |
 | QA Stage 4 ponta a ponta | `scripts/validate_studio_stage4_scenes_import.py` | **novo** |
 
-### Garantias verificadas (QA Stage 4)
+### Etapa 5 (este checkpoint)
 
-- Importação é **atômica**: plano com mídia ausente é rejeitado por inteiro e a timeline atual não muda.
-- WAV do plano ≠ WAV ativo → diálogo obrigatório; recusa mantém o WAV aprovado.
-- Exportação de MP4 a partir do plano importado: 1920×1080, 30 fps, H.264, AAC, nº de quadros = quadros do WAV.
-- Áudio exportado **bit a bit igual** à conversão AAC direta do WAV aprovado (nenhum ganho/efeito novo).
-- Round-trip: timeline → `scenes.json` → recarrega idêntico.
-- Fingerprints (sha256/size/mtime) do WAV aprovado e das mídias de teste inalterados antes/depois.
+| Área | Arquivo | Status |
+|------|---------|--------|
+| Scene sem `media` é planejamento (nunca inventa mídia) | `lib/studio_scenes.py` | alterado |
+| Campo `narration` por cena (ajuda de planejamento) | `lib/studio_scenes.py` | alterado |
+| `save_plan` / `planning_count` / `scenes_to_items(include_planning=False)` | `lib/studio_scenes.py` | alterado |
+| Schema: `media` opcional, `narration`, `metadata` livre | `schemas/studio/scenes.schema.json` | alterado |
+| Gerador local de plano (parágrafo → cena, proporção por palavras, piso 2 s, drift zero) | `lib/studio_scene_generator.py` | **novo** |
+| Botão **Gerar Plano…** (diálogo com texto da narração) | `lib/studio_timeline_ui.py` | alterado |
+| Import de plano só de planejamento não toca a timeline (mostra erro amigável) | `lib/studio_timeline_ui.py` | alterado |
+| Unitários do gerador + suporte a planejamento no formato | `tests/unit/test_studio_scene_generator.py`, `tests/unit/test_studio_scenes.py` | **novo/alterado** |
+| Testes de UI do Gerar Plano + import de plano só de planejamento | `tests/test_studio_timeline_ui.py` | alterado |
+
+### Garantias verificadas (QA Stage 5)
+
+- Gerador **não inventa caminhos de mídia** — todas as cenas saem com `media` ausente e `note` de planejamento.
+- Durações somam **exatamente** `audio_frames(wav_duration)` (sem drift).
+- Piso de **2 s** por cena; se o WAV for curto demais para tantas cenas, o gerador rejeita com mensagem clara.
+- Importar plano só de planejamento → erro amigável, **timeline intocada**.
+- Round-trip de plano com cenas de planejamento: salva sem `media`, recarrega com `planning_count` correto, `scenes_to_items` retorna só as cenas com mídia.
+- Fingerprints do WAV aprovado inalterados (sha256 idêntico antes/depois).
 
 ---
 
@@ -66,7 +81,7 @@ Executar na raiz do repositório:
 
 ```bash
 # Unitários + UI + exportação do Studio
-.venv/Scripts/python.exe -m pytest tests/unit/test_studio_scenes.py tests/test_studio_timeline_ui.py tests/test_studio_timeline.py tests/test_openmontage_studio.py tests/tools/test_studio_export.py tests/tools/test_studio_export_availability.py -q
+.venv/Scripts/python.exe -m pytest tests/unit/test_studio_scenes.py tests/unit/test_studio_scene_generator.py tests/test_studio_timeline_ui.py tests/test_studio_timeline.py tests/test_openmontage_studio.py tests/tools/test_studio_export.py tests/tools/test_studio_export_availability.py -q
 
 # QA local Stage 3 (regressão do fluxo manual + WAV aprovado)
 .venv/Scripts/python.exe scripts/validate_studio_stage3.py
@@ -75,9 +90,11 @@ Executar na raiz do repositório:
 .venv/Scripts/python.exe scripts/validate_studio_stage4_scenes_import.py
 ```
 
-Resultado da última execução (2026-10-13):
+Resultado da última execução (2026-10-13, Etapa 5):
 
-- pytest Studio: **97 passed**
+- pytest Studio: **111 passed** (unit + UI + timeline + app + export tools)
+- QA Stage 3: **passed** (WAV aprovado intacto, 114 frames, H.264/AAC)
+- QA Stage 4: **passed** (import atômico, round-trip, WAV swap declined, full decode)
 - QA Stage 3: **passed** (MP4 verificado, áudio = AAC direto, fontes inalteradas)
 - QA Stage 4: **passed** (import 4 cenas, auto-fit, export verificado, round-trip, import atômico bloqueado, recusa de troca de WAV, WAV aprovado inalterado)
 

@@ -14,7 +14,7 @@ DEFAULT_TRANSITION = "cut"
 DEFAULT_TRANSITION_DURATION = 0.5
 
 _TOP_LEVEL_KEYS = frozenset({"version", "title", "wav", "scenes", "metadata"})
-_SCENE_KEYS = frozenset({"id", "media", "duration_seconds", "transition", "transition_duration", "note"})
+_SCENE_KEYS = frozenset({"id", "media", "duration_seconds", "transition", "transition_duration", "note", "narration"})
 
 
 def _scene_error(position: int, scene_id: object, message: str) -> ValueError:
@@ -31,11 +31,12 @@ def _require_plain_number(value: object, message: str) -> float:
 @dataclass(frozen=True)
 class SceneEntry:
     id: str
-    media: Path
+    media: Path | None = None
     duration: float = DEFAULT_DURATION_SECONDS
     transition: str = DEFAULT_TRANSITION
     transition_duration: float = DEFAULT_TRANSITION_DURATION
     note: str = ""
+    narration: str = ""
 
 
 @dataclass(frozen=True)
@@ -45,6 +46,10 @@ class ScenePlan:
     title: str = ""
     wav: Path | None = None
     metadata: dict = field(default_factory=dict)
+
+    @property
+    def planning_count(self) -> int:
+        return sum(1 for entry in self.scenes if entry.media is None)
 
 
 def _resolve_plan_path(raw: str, plan_dir: Path) -> Path:
@@ -93,7 +98,7 @@ def load_scenes(path: str | Path) -> ScenePlan:
     seen_ids: set[str] = set()
     for index, raw_scene in enumerate(raw_scenes, start=1):
         if not isinstance(raw_scene, dict):
-            raise _scene_error(index, None, "precisa ser um objeto com 'id' e 'media'.")
+            raise _scene_error(index, None, "precisa ser um objeto com 'id'.")
         unknown_scene = sorted(set(raw_scene) - _SCENE_KEYS)
         if unknown_scene:
             raise _scene_error(index, raw_scene.get("id"), f"chave desconhecida: {', '.join(unknown_scene)}.")
@@ -103,12 +108,14 @@ def load_scenes(path: str | Path) -> ScenePlan:
         if scene_id in seen_ids:
             raise _scene_error(index, scene_id, f"id duplicado: {scene_id!r}.")
         seen_ids.add(scene_id)
+        media: Path | None = None
         media_raw = raw_scene.get("media")
-        if not isinstance(media_raw, str) or not media_raw.strip():
-            raise _scene_error(index, scene_id, "'media' precisa ser um caminho de arquivo não vazio.")
-        media = _resolve_plan_path(media_raw, plan_dir)
-        if not media.is_file():
-            raise _scene_error(index, scene_id, f"arquivo de mídia não encontrado: {media}")
+        if media_raw is not None and str(media_raw).strip():
+            if not isinstance(media_raw, str):
+                raise _scene_error(index, scene_id, "'media' precisa ser um caminho de arquivo ou omitido em cenas de planejamento.")
+            media = _resolve_plan_path(media_raw, plan_dir)
+            if not media.is_file():
+                raise _scene_error(index, scene_id, f"arquivo de mídia não encontrado: {media}")
         duration = DEFAULT_DURATION_SECONDS
         if "duration_seconds" in raw_scene:
             try:
@@ -145,6 +152,9 @@ def load_scenes(path: str | Path) -> ScenePlan:
         note = raw_scene.get("note", "")
         if not isinstance(note, str):
             raise _scene_error(index, scene_id, "'note' precisa ser texto.")
+        narration = raw_scene.get("narration", "")
+        if not isinstance(narration, str):
+            raise _scene_error(index, scene_id, "'narration' precisa ser texto.")
         entries.append(SceneEntry(
             id=scene_id,
             media=media,
@@ -152,21 +162,68 @@ def load_scenes(path: str | Path) -> ScenePlan:
             transition=transition,
             transition_duration=transition_duration,
             note=note,
+            narration=narration,
         ))
     return ScenePlan(scenes=tuple(entries), title=title, wav=wav, metadata=metadata)
 
 
-def scenes_to_items(plan: ScenePlan) -> list[TimelineItem]:
-    """Convert a validated plan into frame-quantized timeline items."""
-    return [
-        TimelineItem(
+def scenes_to_items(plan: ScenePlan, *, include_planning: bool = False) -> list[TimelineItem]:
+    """Convert media-bearing scenes into frame-quantized timeline items.
+
+    Planning scenes without media are skipped unless include_planning is True,
+    which is only useful for inspection — TimelineItem always needs a path.
+    """
+    items: list[TimelineItem] = []
+    for entry in plan.scenes:
+        if entry.media is None:
+            if include_planning:
+                raise ValueError(
+                    f"Cena de planejamento {entry.id!r} não tem 'media'; "
+                    "preencha o caminho antes de montar a timeline."
+                )
+            continue
+        items.append(TimelineItem(
             path=entry.media,
             duration=entry.duration,
             transition=entry.transition,
             transition_duration=entry.transition_duration,
-        )
-        for entry in plan.scenes
-    ]
+        ))
+    return items
+
+
+def _scene_payload(entry: SceneEntry) -> dict:
+    scene: dict = {
+        "id": entry.id,
+        "duration_seconds": seconds_to_frames(entry.duration) / FPS,
+        "transition": entry.transition,
+        "transition_duration": seconds_to_frames(entry.transition_duration) / FPS,
+        "note": entry.note,
+    }
+    if entry.media is not None:
+        scene["media"] = str(entry.media)
+    if entry.narration:
+        scene["narration"] = entry.narration
+    return scene
+
+
+def save_plan(path: str | Path, plan: ScenePlan) -> Path:
+    """Write a ScenePlan (including planning scenes) as scenes.json."""
+    if not plan.scenes:
+        raise ValueError("O plano precisa de pelo menos uma cena.")
+    payload: dict = {
+        "version": plan.version or SCENES_VERSION,
+        "scenes": [_scene_payload(entry) for entry in plan.scenes],
+    }
+    if plan.title:
+        payload["title"] = plan.title
+    if plan.wav is not None:
+        payload["wav"] = str(plan.wav)
+    if plan.metadata:
+        payload["metadata"] = plan.metadata
+    destination = Path(path).expanduser()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return destination.resolve()
 
 
 def save_scenes(path: str | Path, items: list[TimelineItem] | tuple[TimelineItem, ...],
@@ -179,27 +236,15 @@ def save_scenes(path: str | Path, items: list[TimelineItem] | tuple[TimelineItem
         raise ValueError("'title' precisa ser texto.")
     if metadata is not None and not isinstance(metadata, dict):
         raise ValueError("'metadata' precisa ser um objeto.")
-    scenes = []
-    for position, item in enumerate(items, start=1):
-        scenes.append({
-            "id": f"cena-{position:02d}",
-            "media": str(item.path),
-            "duration_seconds": item.frames / FPS,
-            "transition": item.transition,
-            "transition_duration": seconds_to_frames(item.transition_duration) / FPS,
-            "note": "",
-        })
-    payload: dict = {"version": SCENES_VERSION, "scenes": scenes}
-    if title:
-        payload["title"] = title
-    if wav is not None:
-        payload["wav"] = str(wav)
-    if metadata is not None:
-        payload["metadata"] = metadata
-    destination = Path(path).expanduser()
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return destination.resolve()
+    entries = [
+        SceneEntry(id=f"cena-{position:02d}", media=item.path, duration=item.frames / FPS,
+                   transition=item.transition,
+                   transition_duration=seconds_to_frames(item.transition_duration) / FPS)
+        for position, item in enumerate(items, start=1)
+    ]
+    return save_plan(path, ScenePlan(scenes=tuple(entries), title=title,
+                                     wav=Path(wav) if wav is not None else None,
+                                     metadata=metadata or {}))
 
 
 def quantize_items(items: list[TimelineItem] | tuple[TimelineItem, ...]) -> list[TimelineItem]:

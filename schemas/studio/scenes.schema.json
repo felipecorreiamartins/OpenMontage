@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "openmontage/studio/scenes",
   "title": "Studio Scene Plan",
-  "description": "Non-destructive scenes.json plan consumed by OpenMontage Studio's timeline editor. Media paths drive the video side only; the approved narration WAV always defines the final duration via Ajustar ao WAV.",
+  "description": "Non-destructive scenes.json plan consumed by OpenMontage Studio's timeline editor. Scenes without media are planning-only (generated from narration) and are never exported as video until a media path is filled in. The approved narration WAV always defines the final duration via Ajustar ao WAV.",
   "type": "object",
   "required": ["version", "scenes"],
   "additionalProperties": false,
@@ -19,14 +19,14 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "media"],
+        "required": ["id"],
         "additionalProperties": false,
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "media": {
             "type": "string",
             "minLength": 1,
-            "description": "Path to a local image or video file. Relative paths resolve against the plan file's directory."
+            "description": "Optional path to a local image or video file. Omit for planning-only scenes (no invented media). Relative paths resolve against the plan file's directory."
           },
           "duration_seconds": {
             "type": "number",
@@ -39,7 +39,8 @@
             "exclusiveMinimum": 0,
             "description": "Overlap for non-cut transitions, quantized to whole frames at 30 fps on load."
           },
-          "note": { "type": "string" }
+          "note": { "type": "string" },
+          "narration": { "type": "string", "description": "Script segment spoken during this scene (planning aid)." }
         }
       }
     },
