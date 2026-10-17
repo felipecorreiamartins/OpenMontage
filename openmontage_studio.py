@@ -256,7 +256,7 @@ class OpenMontageStudio(tk.Tk):
 
     def _build_create_mode(self, page: ttk.Frame) -> None:
         ttk.Label(page, text="Criar vídeo do zero", style="Section.TLabel").pack(anchor="w")
-        ttk.Label(page, text="Prepare o tema e o texto da narração. O painel ao lado gera e mixa áudio local. Monte imagens e clipes locais com um WAV na montagem manual; roteiro automático e pesquisa de mídia ainda não estão integrados. A montagem também aceita e salva planos scenes.json.", style="Card.TLabel", wraplength=610, justify="left").pack(anchor="w", pady=(10, 12))
+        ttk.Label(page, text="Prepare o tema e o texto da narração. O painel ao lado gera e mixa áudio local. Monte imagens e clipes locais com um WAV na montagem manual; roteiro automático e pesquisa de mídia ainda não estão integrados. A montagem também aceita e salva planos scenes.json, gera cenas de teste locais com HyperFrames e anima cenas Stickman articuladas (MP4 1920×1080).", style="Card.TLabel", wraplength=610, justify="left").pack(anchor="w", pady=(10, 12))
         ttk.Label(page, text="Cole ou escreva o texto que será narrado no campo Texto da narração, no painel Áudio.", style="Card.TLabel", wraplength=610).pack(anchor="w")
         ttk.Button(page, text="Abrir montagem local e exportar MP4", command=self._open_timeline).pack(anchor="w", pady=14)
 
@@ -278,7 +278,10 @@ class OpenMontageStudio(tk.Tk):
 
     def _open_timeline(self) -> TimelineEditor:
         if self.timeline_editor is None or not self.timeline_editor.winfo_exists():
-            self.timeline_editor = TimelineEditor(self, ROOT / "projects" / "openmontage-studio" / "renders")
+            self.timeline_editor = TimelineEditor(
+                self,
+                ROOT / "projects" / "openmontage-studio" / "renders",
+                plans_dir=ROOT / "projects" / "openmontage-studio" / "plans")
         self.timeline_editor.deiconify()
         self.timeline_editor.lift()
         return self.timeline_editor

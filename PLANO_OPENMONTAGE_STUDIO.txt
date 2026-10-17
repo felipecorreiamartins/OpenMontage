@@ -1,0 +1,91 @@
+PLANO MESTRE — OPENMONTAGE STUDIO
+Versão 2 — Desenvolvimento incremental
+
+OBJETIVO
+Transformar o OpenMontage em um estúdio desktop de produção e edição audiovisual assistido por IA, com interface simples, resultados de alta qualidade e operação normal sem terminal.
+
+REGRAS OBRIGATÓRIAS
+1. Leia AGENT_GUIDE.md, instrucoes_codex.txt, instrucoes_app.txt e docs/OPENMONTAGE_STUDIO.md quando existirem.
+2. Inspecione o repositório e confirme o estado atual antes de modificar qualquer arquivo.
+3. Preserve backups, arquivos existentes, WAV de referência e recursos já funcionais.
+4. Faça alterações pequenas, testes automatizados e verificações reais. Não declare funções prontas sem testar.
+5. Não implemente todas as etapas de uma vez. Trabalhe somente na etapa autorizada.
+6. Não introduza custos, APIs pagas ou dependências pesadas sem apresentar alternativas e pedir autorização.
+7. Nunca exclua ou sobrescreva vídeos brutos do usuário.
+8. Mostre claramente funções disponíveis, experimentais e ainda não implementadas.
+9. Ao final de cada etapa, relate alterações, testes, limitações e próximo passo.
+
+VISÃO DO PRODUTO
+O aplicativo terá três modos:
+A. CRIAR VÍDEO DO ZERO: tema ou nicho, pesquisa, roteiro, narração, seleção de mídia contextual, música, montagem, legendas, revisão e exportação.
+B. EDITAR VÍDEO BRUTO: importar gameplay, entrevista ou gravação longa; analisar áudio e vídeo; selecionar momentos relevantes; remover pausas; editar conforme instruções; preservar a voz original quando desejado.
+C. PRODUÇÃO PERSONALIZADA: permitir controlar separadamente roteiro, voz, idioma, duração exata, mídia, música, legendas, ritmo, transições e formato.
+
+REQUISITOS FUTUROS
+- Duração personalizada em horas, minutos e segundos, com opção de duração aproximada ou alvo rígido quando tecnicamente viável.
+- Narração Kokoro, seleção de voz e suporte multilíngue condicionado aos modelos disponíveis.
+- Legendas opcionais, com transcrição, sincronização, tradução e estilos configuráveis.
+- Música por emoção e contexto, biblioteca local, controle de licença, volume, ducking e proteção de pico.
+- Pesquisa e seleção de imagens e vídeos pertinentes ao roteiro, com registro de origem e licença.
+- Planejamento de cenas, cortes, zooms, transições e edição com FFmpeg ou ferramentas compatíveis.
+- Exportação MP4 com resolução, proporção, FPS e qualidade configuráveis.
+- IA como cérebro de pesquisa, planejamento, roteirização e revisão, com provedores intercambiáveis. Integração com OpenAI API somente mediante configuração explícita de chave e ciência de custos.
+- Pesquisa de concorrentes e tendências para inspirar títulos, ganchos e thumbnails sem copiar conteúdos nem prometer viralização.
+- Análise de vídeos brutos longos, inclusive gameplays, usando transcrição, eventos de áudio, mudanças visuais e seleção de destaques. O sistema deverá permitir revisão humana.
+- Futuramente: thumbnail automática, identidade visual do aplicativo e ícone de fábrica audiovisual inspirado na criação de vídeos.
+- Interface com progresso, logs compreensíveis, pré-visualização, projetos salvos e recuperação de falhas.
+
+ESTADO ATUAL CONHECIDO
+O OpenMontage Studio já possui uma primeira interface Windows, atalho na área de trabalho, narração Kokoro, seleção musical local e mixagem.
+Último relatório: 59 testes de áudio e integração passaram, além de 4 testes focados; amostra de mixagem validada tecnicamente.
+Perfil aprovado: narração +3 dB, ducking -35 dB, ganho final +3 dB, proteção de pico em -1 dBFS.
+Referência intocável: D:\YouTube-Automacao\Audios\audio_final_documentario.wav.
+Ainda não estão integrados à interface: roteiro automático, edição de vídeo, legendas, vários idiomas e renderização MP4.
+Confirme estes fatos no repositório, pois este documento descreve um estado anterior e não substitui a inspeção.
+
+ETAPA 2 — IMPLEMENTAR AGORA
+1. Reorganizar a interface existente com navegação entre os três modos: Criar vídeo, Editar vídeo bruto e Produção personalizada.
+2. Preservar o funcionamento real dos controles atuais de narração, seleção musical e mixagem.
+3. Permitir informar duração personalizada em horas, minutos e segundos, validando entradas e deixando claro quando é apenas duração planejada.
+4. Adicionar controles de idioma, legendas e estilo como configurações preparatórias, marcando ou desabilitando recursos que ainda não estejam integrados.
+5. No modo Editar vídeo bruto, permitir selecionar um arquivo local sem alterá-lo. Não prometer edição automática nesta etapa.
+6. Organizar visualmente os campos em seções claras, com ajuda contextual e mensagens de erro compreensíveis.
+7. Manter o iniciador e o atalho Windows funcionando.
+8. Criar ou atualizar testes para navegação, validação dos campos e regressão das funções de áudio.
+9. Documentar o que está pronto e o que falta.
+10. Não implementar nesta etapa geração de roteiros, pesquisa web, edição automática, legendagem real ou exportação MP4 sem autorização adicional.
+
+FLUXO DE TRABALHO
+Primeiro apresente um plano curto com arquivos a alterar, riscos e testes. Aguarde autorização antes de editar. Depois implemente apenas a ETAPA 2, valide e entregue um relatório claro.
+
+RESULTADO DESEJADO
+Um aplicativo organizado, fácil de entender e preparado para crescer, sem perder as funções já testadas.
+
+ETAPA 3 — MONTAGEM LOCAL E EXPORTAÇÃO MP4
+
+STATUS E AUTORIZAÇÃO
+Etapa autorizada pelo usuário, ainda pendente de implementação e testes.
+Esta seção acrescenta a autorização da ETAPA 3 ao plano, preservando todo o conteúdo anterior como histórico. A atualização atual é exclusivamente documental; não iniciar a implementação nem realizar outras alterações agora.
+
+ESCOPO AUTORIZADO
+1. Montar imagens e clipes locais em uma timeline.
+2. Permitir configurar a duração e a ordem dos itens da timeline.
+3. Disponibilizar transições de corte, crossfade e fade.
+4. Sincronizar a montagem com o WAV aprovado: D:\YouTube-Automacao\Audios\audio_final_documentario.wav.
+5. Exportar com FFmpeg em MP4, resolução 1920x1080, vídeo H.264 e 30 fps.
+
+PRESERVAÇÃO
+Preservar os arquivos originais de imagens e clipes, o áudio aprovado, os backups e o pipeline existente. O WAV aprovado deve ser usado somente como entrada, sem alteração ou sobrescrita. A exportação deve gerar um novo arquivo, sem sobrescrever as fontes ou saídas existentes.
+
+PENDÊNCIAS
+Implementação e testes da timeline, duração, ordenação, transições, sincronização e exportação MP4. Validar o resultado real e a preservação dos recursos existentes antes de declarar a etapa concluída.
+
+ATUALIZAÇÃO DA ETAPA 3 — 13/10/2026
+Continuação autorizada expressamente pelo usuário. O texto anterior permanece como histórico.
+Timeline local, ordenação, duração, corte/crossfade/fade, ajuste ao WAV e exportação MP4 estavam implementados e foram revisados.
+Corrigida a ausência de StudioExport.check_available por compatibilidade com BaseTool.get_status.
+105 testes automatizados do escopo passaram. Exportação real pela interface validada em 1920x1080, H.264, 30 fps, com o WAV aprovado completo (3,775 s); vídeo de 114 quadros/3,800 s.
+Áudio do MP4 idêntico à conversão direta para AAC, sem alterar a mixagem ou o WAV original. Backups e mídias anteriores preservados.
+Pendências: inspeção visual manual da janela (helper Windows falhou), audição humana do MP4 e desempenho com montagens de 8–20 minutos. Persistência da timeline entre sessões e prévia integrada ainda não implementadas.
+Relatório: docs/RELATORIO_ETAPA3_20261013.md.
+Etapa 4 não iniciada.

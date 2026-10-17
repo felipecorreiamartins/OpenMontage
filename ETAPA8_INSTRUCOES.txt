@@ -1,0 +1,101 @@
+ETAPA 8 — MOTOR DE ANIMAÇÃO STICKMAN DO OPENMONTAGE
+
+Você está trabalhando no projeto OpenMontage, localizado em:
+C:\Users\Felipe C Martins\OpenMontage-Projeto\OpenMontage
+
+ANTES DE COMEÇAR:
+1. Leia AGENTS.md e HANDOFF.md.
+2. Analise o estado atual do Git e todas as alterações não commitadas.
+3. Inspecione o OpenMontage Studio, o HyperFrames, a timeline, o FFmpeg e os testes existentes.
+4. Preserve integralmente o trabalho realizado nas Etapas 3, 4, 5, 6 e 7.
+
+OBJETIVO PRINCIPAL:
+Adicionar ao OpenMontage Studio um modo de produção de vídeos animados no estilo Stickman, com personagens articulados, cenários, objetos, movimentos e histórias visuais.
+
+A meta futura é produzir automaticamente vídeos completos de 8 a 20 minutos, sem precisar animar manualmente cada cena.
+
+FUNCIONALIDADES DA ETAPA 8:
+
+1. MOTOR DE ANIMAÇÃO STICKMAN
+Criar um sistema reutilizável de personagens 2D, preferencialmente utilizando SVG, HTML, CSS, JavaScript e a infraestrutura HyperFrames já existente.
+Os personagens devem ter cabeça, tronco, braços e pernas articulados.
+
+2. MOVIMENTOS E AÇÕES
+Implementar ações animadas reutilizáveis:
+- Caminhar e correr.
+- Parar e ficar em repouso.
+- Apontar e gesticular.
+- Sentar e levantar.
+- Interagir com objetos.
+- Expressar emoções simples por postura e movimento.
+
+3. PERSONAGENS E CENÁRIOS
+Criar personagens consistentes entre diferentes cenas.
+Permitir cenários reutilizáveis, como escritório, rua, casa e ambiente abstrato.
+Permitir objetos como mesa, cadeira, computador e telefone.
+
+4. DEMONSTRAÇÃO FUNCIONAL
+Produzir um vídeo de demonstração de 15 a 30 segundos no qual:
+- Um Stickman entra em cena.
+- Caminha até uma mesa.
+- Senta em uma cadeira.
+- Interage com um computador.
+- Realiza gestos ou movimentos enquanto trabalha.
+
+Os movimentos devem ser realmente animados, não apenas textos estáticos ou transições de entrada.
+
+5. INTEGRAÇÃO COM OPENMONTAGE STUDIO
+Adicionar uma forma simples de criar ou selecionar cenas Stickman.
+Preservar os modos existentes de documentário e HyperFrames.
+Permitir adicionar a cena à timeline e exportá-la para MP4.
+
+6. ESTRUTURA DE CENAS
+Criar uma representação estruturada e reutilizável de personagens, cenários, ações e tempos.
+Manter compatibilidade com os projetos scenes.json existentes.
+Não quebrar importação, exportação ou edição de cenas anteriores.
+
+7. QUALIDADE E OTIMIZAÇÃO
+Reutilizar recursos e evitar renderizações desnecessárias.
+Tratar falhas de dependências com mensagens compreensíveis.
+Evitar travamentos da interface durante tarefas longas.
+Organizar o código de forma modular para futuras expansões.
+Corrigir bugs encontrados dentro do escopo.
+
+8. TESTES
+Criar testes unitários e de integração para o novo motor.
+Validar renderização local em 1920x1080, 30 FPS, H.264.
+Testar o fluxo pela interface do Studio.
+Executar testes de regressão das Etapas 3 a 7.
+Registrar resultados, falhas e limitações.
+
+9. DOCUMENTAÇÃO
+Atualizar HANDOFF.md com:
+- Funcionalidades implementadas.
+- Arquivos modificados.
+- Testes executados e resultados.
+- Problemas conhecidos.
+- Instruções para testar a demonstração.
+- Próximos passos recomendados.
+
+REGRAS OBRIGATÓRIAS:
+- Nunca modificar, substituir ou sobrescrever o arquivo D:\YouTube-Automacao\Audios\audio_final_documentario.wav.
+- Preservar backups, projetos, mídias e exportações existentes.
+- Não descartar alterações não commitadas.
+- Não executar comandos destrutivos do Git.
+- Não fazer commits automaticamente.
+- Evitar dependências desnecessárias.
+- Não afirmar que algo funciona sem testar.
+- Não avançar para a Etapa 9 sem minha autorização.
+
+PLANEJAMENTO DAS PRÓXIMAS ETAPAS:
+Etapa 9 — Direção visual cinematográfica, biblioteca de estilos, câmera e composição.
+Etapa 10 — Sincronização automática de narração, ações, legendas, música e cenas.
+Etapa 11 — Cérebro de IA para pesquisa, roteiro, storyboard e direção visual.
+Etapa 12 — Automação completa: tema até MP4 final.
+Etapa 13 — Otimização, correção de bugs, recuperação de falhas e testes de vídeos longos.
+
+EXECUÇÃO:
+Comece auditando brevemente o projeto existente.
+Implemente somente a Etapa 8, de forma incremental e segura.
+Execute os testes necessários, corrija os problemas encontrados e apresente um relatório final.
+Pare ao concluir a Etapa 8 e aguarde aprovação para continuar.

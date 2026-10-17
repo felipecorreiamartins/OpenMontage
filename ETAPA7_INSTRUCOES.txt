@@ -1,0 +1,15 @@
+Leia AGENTS.md e HANDOFF.md antes de iniciar. Verifique o estado atual do Git e preserve alterações pendentes.
+
+OBJETIVO: Etapa 7 do OpenMontage Studio — integrar o HyperFrames à interface de montagem local, reutilizando a infraestrutura HyperFrames já existente no projeto.
+
+1. Inspecione os componentes HyperFrames existentes e avalie sua compatibilidade com o Studio.
+2. Implemente um fluxo mínimo para gerar uma cena animada de teste e renderizá-la como MP4 silencioso 1920x1080 a 30 fps.
+3. Permita associar a cena gerada ao plano scenes.json e à timeline pela interface, com mensagens claras de progresso e erro.
+4. Preserve compatibilidade com os planos anteriores e as mídias stock da Etapa 6.
+5. Não altere o WAV aprovado em D:\YouTube-Automacao\Audios\audio_final_documentario.wav, backups, mídias originais ou arquivos não relacionados. Não sobrescreva saídas existentes.
+6. Valide dependências necessárias e trate falhas sem interromper o Studio.
+7. Execute testes automatizados e regressões das Etapas 3 a 6. Faça um teste de exportação curta, usando o WAV aprovado somente para leitura.
+8. Atualize HANDOFF.md com as alterações, testes, limitações e próximos passos.
+9. Não faça commit sem minha autorização.
+
+Ao concluir, apresente um resumo simples e explique como testar a nova funcionalidade pela interface. Se encontrar impedimentos importantes, explique antes de fazer mudanças arriscadas.

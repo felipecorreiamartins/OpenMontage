@@ -1,0 +1,72 @@
+# OPENMONTAGE — ETAPA 8.3B
+## Protótipo visual Stickman com Blender
+
+### Objetivo
+Validar o Blender 5.2.2 LTS como motor especializado para animações Stickman automatizadas.
+
+### Ambiente
+- Windows
+- AMD RX 580
+- 16 GB de RAM
+- Blender 5.2.2 LTS instalado
+- Executável: `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`
+
+### Requisitos do protótipo
+Criar uma animação de 20 a 30 segundos contendo:
+
+1. Personagem Stickman com rig articulado e proporções consistentes.
+2. Caminhada natural, com pés apoiados corretamente no chão.
+3. Mesa, cadeira e objeto simples.
+4. Personagem sentando e levantando sem atravessar objetos.
+5. Interação com objeto e gesto corporal.
+6. Ações programadas em uma timeline.
+7. Sincronização das ações com marcações temporais de uma narração curta.
+8. Renderização MP4 para inspeção visual.
+
+### Estratégia
+- Reutilizar conceitos e artefatos do pipeline original `character-animation`.
+- Não reutilizar os bugs do motor SVG/GSAP.
+- Criar um protótipo isolado em `experiments/blender_stickman_83b/`.
+- Utilizar Python e a API do Blender para gerar a cena.
+- Preferir renderização leve e compatível com a RX 580.
+- Não depender de serviços pagos ou APIs externas.
+- Evitar instalações adicionais desnecessárias.
+
+### Critérios de qualidade
+- Sem membros desconectados.
+- Sem pés deslizando visivelmente.
+- Sem atravessar cadeira, mesa ou objetos.
+- Movimentos com aceleração e desaceleração naturais.
+- Duração e quantidade de frames corretas.
+- Ações sincronizadas com os tempos definidos.
+- Renderização estável, com tempo e consumo de memória registrados.
+
+### Proteções
+- Não alterar o OpenMontage Studio.
+- Não modificar HyperFrames nem pipelines originais.
+- Não sobrescrever arquivos existentes.
+- Não tocar no WAV aprovado.
+- Não fazer commits, resets ou alterações de branch.
+- Não instalar dependências sem autorização.
+
+### Execução
+1. Inspecionar apenas os componentes existentes relevantes.
+2. Planejar a estrutura do protótipo.
+3. Criar os arquivos exclusivamente na pasta experimental.
+4. Fazer uma renderização curta de validação.
+5. Corrigir defeitos evidentes identificados.
+6. Apresentar os arquivos gerados, resultados e limitações.
+7. Solicitar avaliação visual humana antes de qualquer integração.
+
+### Uso eficiente dos tokens
+- Aproveitar a auditoria da Etapa 8.2 e a análise 8.3A.
+- Evitar varreduras repetidas do repositório.
+- Executar testes pequenos antes de renderizações completas.
+- Evitar logs extensos e trabalho fora do escopo.
+- Priorizar qualidade visual sobre quantidade de funcionalidades.
+- Se houver erro, diagnosticar sua causa antes de repetir comandos.
+
+### Entrega
+Um protótipo Stickman reproduzível, um vídeo MP4 de demonstração e um resumo técnico com os problemas encontrados.
+
+Não integrar ao OpenMontage sem aprovação explícita.

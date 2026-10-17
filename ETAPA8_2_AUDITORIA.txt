@@ -1,0 +1,52 @@
+ETAPA 8.2 — AUDITORIA GERAL DO OPENMONTAGE E DIAGNÓSTICO DO STICKMAN
+
+Continue o projeto OpenMontage existente. NÃO reinicie, reconstrua ou substitua o projeto.
+
+OBJETIVO:
+Auditar toda a arquitetura original, os agentes, pipelines e as funcionalidades adicionadas nas Etapas 3 a 8.1. Identificar o que realmente funciona e investigar por que o Stickman continua visualmente bugado mesmo após 229 testes aprovados.
+
+PRIMEIRO:
+1. Leia AGENTS.md e HANDOFF.md.
+2. Inspecione git status, alterações não commitadas e estrutura do repositório.
+3. Mapeie os agentes, skills, ferramentas, pipelines e orquestradores já existentes.
+4. Identifique quais componentes originais já permitem gerar documentários e quais ainda não estão integrados ao Studio.
+
+AUDITORIA:
+- Pesquisa e verificação de fatos.
+- Roteiros e direção narrativa.
+- Kokoro e geração de narração.
+- Imagens, vídeos stock, licenças e créditos.
+- HyperFrames e animações.
+- Motor Stickman.
+- Biblioteca musical e mixagem.
+- FFmpeg, timeline e exportação.
+- Legendas e sincronização.
+- Agentes de automação e orquestração.
+- Capacidade atual de editar vídeos brutos.
+
+DIAGNÓSTICO STICKMAN:
+O usuário assistiu ao MP4 da Etapa 8.1 e confirmou que os bugs continuam: personagem atravessando cadeira/mesa, articulações desconectadas e movimentos artificiais ao sentar e comemorar.
+
+Não considere testes unitários aprovados como prova de qualidade visual.
+Investigue os frames reais do vídeo, a cinemática, as coordenadas, a hierarquia SVG, as camadas e as transições. Identifique causas concretas e proponha correções verificáveis.
+
+ENTREGÁVEIS:
+1. Inventário dos agentes e funcionalidades existentes.
+2. Classificação: funcional e validado, parcial, com defeito ou ausente.
+3. Diagnóstico técnico dos bugs Stickman, com evidências.
+4. Mapa de integrações faltantes e funcionalidades duplicadas.
+5. Plano priorizado para documentários automáticos, animações Stickman e edição inteligente de vídeos brutos.
+6. Relatório de riscos, dependências e custos potenciais.
+
+REGRAS:
+- Nesta etapa, faça apenas auditoria e diagnóstico. Não implemente mudanças de código ainda.
+- Não apague arquivos, backups ou exportações.
+- Não descarte alterações não commitadas nem execute comandos destrutivos do Git.
+- Não faça commits ou staging.
+- Nunca modifique D:\YouTube-Automacao\Audios\audio_final_documentario.wav.
+- Preserve as Etapas 3 a 8.1 e todos os agentes originais.
+- Não avance para a Etapa 9 sem aprovação.
+- Se precisar executar testes, priorize comandos seguros e não destrutivos.
+- Ao terminar, apresente um relatório objetivo, com referências aos arquivos e próximos passos.
+
+Comece agora pela leitura do contexto e pelo inventário. Não altere código antes da minha aprovação.

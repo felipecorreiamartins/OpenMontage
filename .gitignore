@@ -104,3 +104,55 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# Backups locais
+/backups/
+*.bak
+*.backup
+*.backup.*
+
+# Audios de teste gerados na raiz
+/teste_*.wav
+
+# Historicos e cache locais do Aider
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.*/
+
+# Variantes de ambiente; preservar o exemplo sanitizado
+.env.*
+!.env.example
+
+# Temporarios, logs e cobertura
+/tmp/
+/temp/
+/logs/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.log
+.coverage.*
+coverage.xml
+
+# Ambientes e pesos de modelos locais
+.venv-*/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.gguf
+/voices/.cache/
+
+# Credenciais e chaves locais
+/.aws/
+/.ssh/
+/secrets/
+/credentials/
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519

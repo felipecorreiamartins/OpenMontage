@@ -1,0 +1,55 @@
+ETAPA 8.1 — CORREÇÃO E APRIMORAMENTO DO MOTOR STICKMAN
+
+Continue o projeto OpenMontage existente, localizado em:
+C:\Users\Felipe C Martins\OpenMontage-Projeto\OpenMontage
+
+ANTES DE COMEÇAR:
+1. Leia AGENTS.md e HANDOFF.md.
+2. Analise o estado do Git e as alterações não commitadas.
+3. Inspecione lib/studio_stickman.py, a integração HyperFrames, a interface do Studio e os testes existentes.
+4. Preserve integralmente todas as funcionalidades das Etapas 3 a 8.
+
+PROBLEMAS OBSERVADOS NO TESTE REAL:
+- O Stickman caminhou até a mesa, mas apresentou movimentos artificiais.
+- Ao sentar, o corpo ficou desalinhado e atravessou partes da cadeira e da mesa.
+- Durante os gestos e a comemoração, braços e mãos apareceram separados do corpo.
+- Algumas transições entre movimentos ficaram bruscas.
+- O vídeo foi renderizado, mas os testes automatizados não detectaram esses defeitos visuais.
+
+OBJETIVO DA ETAPA 8.1:
+Corrigir o sistema de articulações e melhorar a qualidade visual das animações, mantendo o motor modular e preparado para futuras cenas geradas automaticamente a partir de roteiros.
+
+TAREFAS:
+1. Corrigir a hierarquia de articulações SVG: cabeça, tronco, ombros, cotovelos, mãos, quadril, joelhos e pés.
+2. Garantir que as extremidades dos membros permaneçam conectadas durante todos os movimentos.
+3. Corrigir as posições e proporções ao caminhar, sentar, levantar, digitar, apontar e comemorar.
+4. Alinhar corretamente o personagem com cadeira, mesa e computador.
+5. Melhorar interpolação, suavização e transições entre ações.
+6. Revisar a ordem das camadas visuais para evitar sobreposições incorretas.
+7. Manter personagens, cenários e ações reutilizáveis.
+8. Criar testes que validem posições das articulações e quadros intermediários, não apenas a existência do MP4.
+9. Renderizar novamente a demonstração de 20 segundos e verificar amostras de quadros ao longo da animação.
+10. Executar os testes de regressão das Etapas 3 a 8 e corrigir falhas relacionadas.
+11. Atualizar HANDOFF.md com alterações, testes, resultados e limitações.
+
+REQUISITOS DE QUALIDADE:
+- O personagem deve caminhar até a cadeira sem deformações.
+- Deve sentar com postura coerente e sem atravessar objetos.
+- Deve interagir com o computador de maneira visualmente compreensível.
+- Braços e mãos devem permanecer conectados durante os gestos.
+- As mudanças de ação devem ocorrer sem saltos abruptos.
+- Se alguma limitação não puder ser resolvida, documente-a claramente.
+
+REGRAS OBRIGATÓRIAS:
+- Nunca modificar ou sobrescrever D:\YouTube-Automacao\Audios\audio_final_documentario.wav.
+- Não apagar backups, mídias, projetos ou exportações.
+- Não descartar alterações não commitadas.
+- Não executar comandos destrutivos do Git.
+- Não fazer commits automaticamente.
+- Não adicionar dependências desnecessárias.
+- Não avançar para a Etapa 9 sem minha aprovação.
+
+Ao terminar, apresente um relatório com os bugs corrigidos, testes executados, arquivos alterados e instruções para reproduzir a demonstração corrigida.
+
+IMPORTANTE:
+O objetivo futuro é gerar vídeos completos no estilo dos canais Franz, Axen e Zenn, com personagens e ações determinados automaticamente pelo significado do roteiro. Nesta etapa, concentre-se na estabilidade e qualidade do motor de animação. Não implemente ainda o diretor de IA.

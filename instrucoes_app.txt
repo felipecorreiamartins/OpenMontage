@@ -1,0 +1,46 @@
+PROJETO: OPENMONTAGE STUDIO — APLICATIVO WINDOWS
+
+**OBJETIVO**
+
+Criar uma interface gráfica desktop para o OpenMontage, permitindo configurar e produzir documentários cinematográficos de 8 a 20 minutos sem usar o terminal na operação normal.
+
+**REGRAS**
+
+1. Leia `instrucoes_codex.txt` e analise o projeto existente antes de alterar qualquer coisa.
+2. Preserve os arquivos originais, os backups e o trabalho já realizado.
+3. Implemente em etapas pequenas e execute testes.
+4. Não invente funcionalidades: indique claramente o que já funciona e o que ainda não foi integrado.
+5. Evite serviços pagos e dependências desnecessárias.
+
+**INTERFACE**
+
+Criar o OpenMontage Studio com Python e CustomTkinter (ou alternativa adequada), contendo:
+
+- Tema e descrição do documentário.
+- Duração de 8, 10, 15 ou 20 minutos.
+- Idioma português, inglês, alemão e espanhol, conforme suporte real.
+- Escolha da voz e configuração do Kokoro.
+- Música automática por emoção, usando a biblioteca local.
+- Estilo visual, legendas e pasta de saída.
+- Botão Gerar Documentário, progresso, logs e mensagens de erro.
+- Botão para abrir o arquivo MP4 gerado.
+
+**INTEGRAÇÃO**
+
+Conectar primeiro as funcionalidades já validadas: narração, seleção musical e mixagem. Investigar o pipeline de roteiro, busca de imagens e vídeos, edição e renderização antes de habilitar seus controles. Não simular a geração de vídeos.
+
+**ÁUDIO**
+
+Preservar a referência `D:\YouTube-Automacao\Audios\audio_final_documentario.wav`.
+
+Narração +3 dB, ducking -35 dB e ganho final +3 dB.
+
+Os 53 testes focados passaram na última execução.
+
+O WAV de validação teve pico próximo de 0 dBFS: implementar e testar proteção contra clipping sem modificar desnecessariamente o equilíbrio aprovado.
+
+**ENTREGA**
+
+Criar um iniciador e atalho na área de trabalho do Windows. Documentar como abrir e usar o aplicativo. Executar testes e apresentar relatório das funções operacionais, pendências e próximos passos.
+
+**COMECE** analisando o repositório e propondo uma implementação incremental. Depois desenvolva a primeira versão funcional da interface.

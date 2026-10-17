@@ -1,0 +1,14 @@
+Estou desenvolvendo um projeto chamado OpenMontage, localizado em C:\Users\Felipe C Martins\OpenMontage-Projeto\OpenMontage.
+Meu objetivo é automatizar a criação de documentários cinematográficos para o YouTube, com duração de 8 a 20 minutos.
+Já configuramos e testamos:
+- Narração com Kokoro.
+- Seleção musical por emoção.
+- Mixagem automática com FFmpeg.
+- Um equilíbrio de áudio aprovado, utilizando narração amplificada, ducking de -35 dB e amplificação final de +3 dB.
+Quero que você assuma o máximo possível do trabalho técnico, analisando, configurando, modificando e testando o OpenMontage, sem que eu precise executar cada comando manualmente.
+Precisamos integrar a mixagem ao pipeline, automatizar a biblioteca musical, a geração de imagens, a montagem e a renderização.
+Antes de modificar arquivos, analise a estrutura atual e preserve o que já funciona. Quero priorizar soluções gratuitas e músicas com licenças adequadas à monetização no YouTube.
+
+vc consegue fazer o resto sozinho pelo meu windows, por aqui?
+
+Antes de modificar qualquer arquivo, analise a estrutura e faça um backup dos arquivos que serão alterados, preservando minhas modificações atuais. Depois, implemente e teste por etapas. Comece pela integração da mixagem aprovada ao pipeline. Execute os comandos diretamente e me pergunte apenas quando houver uma decisão indispensável. Não contrate serviços pagos nem publique vídeos.

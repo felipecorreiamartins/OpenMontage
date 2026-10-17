@@ -1,0 +1,119 @@
+# OPENMONTAGE — ETAPA 8.3A
+## Avaliação técnica do motor de animação Stickman
+
+### Objetivo
+
+Escolher a melhor arquitetura para produzir animações Stickman de alta qualidade, com histórias de 8 a 20 minutos, baseadas em roteiro e narração sincronizada.
+
+Buscamos qualidade visual próxima das referências Franz, Axen e Zenn, com movimentos naturais, personagens consistentes, cenários, expressões e interações com objetos.
+
+Esta etapa é exclusivamente de análise e planejamento. Não implementar nada ainda.
+
+### 1. Aproveitar o conhecimento existente
+
+Antes de investigar, consulte apenas o necessário em:
+
+- `AGENTS.md`
+- `HANDOFF.md`
+- `RELATORIO_OPENCODE_ETAPA8_2.md`
+- Código relevante dos motores de animação existentes.
+
+Reutilize as conclusões da auditoria anterior e o histórico desta sessão.
+
+Não refaça inventários, testes ou buscas já concluídos sem uma justificativa técnica.
+
+### 2. Comparar os motores
+
+Avalie:
+
+- Motor Stickman atual do Studio.
+- Pipeline original `character-animation`, incluindo ferramentas de rigging, poses e renderização.
+- PixiJS com rigging e cinemática inversa (IK).
+- Motion Canvas.
+- Blender com animação e rigging 2D.
+- Outras alternativas gratuitas e de código aberto, somente se apresentarem vantagens concretas.
+
+Investigue compatibilidade, licenciamento, limitações e facilidade de integração. Não presuma que uma biblioteca tenha rigging ou IK nativos sem verificar.
+
+### 3. Critérios de avaliação
+
+Compare cada alternativa quanto a:
+
+1. Qualidade e naturalidade dos movimentos.
+2. Rigging, articulações e cinemática inversa.
+3. Colisões e interações com objetos.
+4. Personagens e cenários reutilizáveis.
+5. Controle preciso da duração e dos movimentos.
+6. Sincronização com roteiro, narração, pausas e emoções.
+7. Renderização automática em MP4.
+8. Desempenho em Windows com 16 GB de RAM e RX 580.
+9. Licença e possibilidade de uso comercial.
+10. Integração com o OpenMontage e reutilização do código existente.
+
+Diferencie capacidades comprovadas, hipóteses e funcionalidades que precisariam ser desenvolvidas.
+
+### 4. Arquitetura desejada
+
+Planeje um sistema modular:
+
+Roteiro → análise de cenas → direção de animação → personagens e ações → renderização → sincronização de áudio → vídeo final.
+
+O motor Stickman deverá ser independente do HyperFrames.
+
+O HyperFrames continuará responsável por motion graphics e elementos visuais complementares dos documentários.
+
+Não reconstruir o OpenMontage nem duplicar recursos existentes sem necessidade.
+
+### 5. Protótipo de validação
+
+Proponha um protótipo isolado de 20 a 30 segundos contendo:
+
+- Um personagem caminhando.
+- Interação com mesa e cadeira.
+- Sentar e levantar corretamente.
+- Gestos e expressões.
+- Sincronização de ações com uma narração curta.
+
+Defina critérios objetivos de aprovação visual, desempenho e integração.
+
+Não execute o protótipo nesta etapa.
+
+### 6. Uso eficiente dos tokens
+
+- Priorize evidências já documentadas.
+- Faça buscas direcionadas, não varreduras completas repetidas.
+- Leia trechos relevantes em vez de arquivos enormes.
+- Não repita testes aprovados na auditoria.
+- Evite comandos e saídas excessivamente longas.
+- Não investigue funcionalidades fora do escopo Stickman.
+- Se faltar informação, indique a lacuna em vez de iniciar investigações extensas.
+- Apresente conclusões objetivas, com justificativas técnicas.
+- Não utilize todo o contexto disponível apenas porque ele está disponível.
+
+Economizar tokens não deve comprometer a precisão da recomendação.
+
+### 7. Restrições obrigatórias
+
+- Não modificar código-fonte.
+- Não instalar dependências.
+- Não criar ou alterar arquivos.
+- Não executar renderizações ou testes demorados.
+- Não fazer commits nem modificar o estado do Git.
+- Não alterar ou sobrescrever o WAV aprovado.
+- Não descartar alterações existentes.
+- Não iniciar a implementação sem autorização.
+
+### 8. Entrega esperada
+
+Apresente diretamente na conversa:
+
+1. Comparação técnica dos motores.
+2. Vantagens e limitações de cada alternativa.
+3. Identificação de funcionalidades duplicadas.
+4. Arquitetura recomendada para o Stickman.
+5. Estratégia de integração com o OpenMontage.
+6. Plano do protótipo visual.
+7. Riscos, dependências e custos.
+8. Próxima ação recomendada.
+
+Finalize com uma recomendação clara, indicando qual motor merece ser testado primeiro e por quê.

@@ -40,7 +40,18 @@
             "description": "Overlap for non-cut transitions, quantized to whole frames at 30 fps on load."
           },
           "note": { "type": "string" },
-          "narration": { "type": "string", "description": "Script segment spoken during this scene (planning aid)." }
+          "narration": { "type": "string", "description": "Script segment spoken during this scene (planning aid)." },
+          "source": {
+            "type": "string",
+            "description": "Stock source adapter name (e.g. pexels, pixabay_video, wikimedia). Omit if not from stock."
+          },
+          "source_id": { "type": "string", "description": "Unique id of the item within the stock source." },
+          "source_url": { "type": "string", "description": "Public landing page for attribution." },
+          "creator": { "type": "string", "description": "Photographer or author name for attribution." },
+          "license": {
+            "type": "string",
+            "description": "License string (e.g. Pexels License, CC BY-SA 4.0). Wikimedia may be per-file."
+          }
         }
       }
     },

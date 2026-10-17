@@ -1,0 +1,23 @@
+TAREFA: Preparar documentação para a auditoria da Etapa 8.2 do OpenMontage.
+
+Leia AGENTS.md, HANDOFF.md e ETAPA8_2_AUDITORIA.txt, caso existam.
+
+Analise os agentes, diretores, skills e pipelines existentes. Identifique o que já funciona, o que está parcialmente integrado e o que ainda falta conectar ao Studio.
+
+Investigue também os componentes de documentários, animações Stickman e edição de vídeos brutos.
+
+Registre os problemas conhecidos do Stickman, diferenciando causas comprovadas de hipóteses.
+
+RESTRIÇÕES:
+- Não modificar código-fonte.
+- Não modificar AGENTS.md, HANDOFF.md ou arquivos da auditoria do Codex.
+- Não executar renderizações ou testes demorados.
+- Não fazer commits.
+- Não modificar o áudio aprovado.
+- Não descartar alterações existentes.
+- Economizar tokens e evitar leituras repetidas.
+
+ÚNICO ARQUIVO QUE PODE SER CRIADO:
+RELATORIO_OPENCODE_ETAPA8_2.md
+
+Ao finalizar, apresente um resumo do relatório.

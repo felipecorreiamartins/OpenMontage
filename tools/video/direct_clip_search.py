@@ -75,6 +75,7 @@ class DirectClipSearch(BaseTool):
     install_instructions = (
         "At least one stock source must be configured:\n"
         "  PEXELS_API_KEY for Pexels (free at https://www.pexels.com/api/)\n"
+        "  PIXABAY_API_KEY for Pixabay video (free at https://pixabay.com/api/docs/)\n"
         "  UNSPLASH_ACCESS_KEY for Unsplash (see https://unsplash.com/documentation)\n"
         "  archive.org, nasa, and wikimedia work without API keys"
     )

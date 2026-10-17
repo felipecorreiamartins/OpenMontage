@@ -150,6 +150,17 @@ Record the music config in `edit_decisions.audio.music` with:
 narration to duck under. If the user approved a narration track, set
 ducking to true and let it dip during segments.
 
+For the user's approved Kokoro documentary mix, persist the complete balance
+in `edit_decisions.metadata.audio_mix`: `narration_gain_db` (the confirmed gain
+for the actual narration source), `duck_level: -35`, `master_gain_db: 3`, and
+`normalize: false`. Do not guess the narration gain or apply it twice to an
+already amplified source. Until it is confirmed, leave the profile pending.
+These are mixer parameters, not a claim that the music measures exactly -35 dB.
+Use `audio.music.ducking: true`; do not also set a linear ducking level.
+Record narration asset IDs and start/end times in `audio.narration.segments`.
+Prepare the music bed to cover the timeline before compose; the mixer does not
+automatically loop short music. See `docs/AUDIO_PIPELINE.md`.
+
 ### 5. Choose Transitions From A Small Vocabulary
 
 Documentary montage uses maybe four transitions total across the

@@ -129,6 +129,18 @@ clip and a 2023 Pexels clip feel like the same film.
 
 ### 4. Mix The Audio Once, In Compose
 
+For an approved narrated documentary with `metadata.audio_mix`, use the
+`documentary_mix_inputs` adapter described in `docs/AUDIO_PIPELINE.md` to
+resolve the edit's narration, music and SFX assets. Execute `audio_mixer`
+through the registry and pass `result.data["output"]` as `audio_path` to the
+existing `video_compose.execute({"operation": "render", ...})` call. Build
+this mix **before** the render call in step 2. Preserve `render_runtime` and
+pass `proposal_packet` as usual. A failed/missing mix blocks the render; never
+silently export without narration. The external mix replaces the rendered
+audio, so include every desired SFX in the mix. Do not add a second music bed
+or normalize/amplify the output again after muxing. Log the mixer result in
+`render_report.metadata.audio_mix` and measure peaks and duration.
+
 The edit artifact already decided volumes, fades, silence windows,
 and L-cut sfx layers. Your job is to execute them faithfully:
 

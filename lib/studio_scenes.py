@@ -14,7 +14,11 @@ DEFAULT_TRANSITION = "cut"
 DEFAULT_TRANSITION_DURATION = 0.5
 
 _TOP_LEVEL_KEYS = frozenset({"version", "title", "wav", "scenes", "metadata"})
-_SCENE_KEYS = frozenset({"id", "media", "duration_seconds", "transition", "transition_duration", "note", "narration"})
+_SCENE_KEYS = frozenset({
+    "id", "media", "duration_seconds", "transition", "transition_duration", "note", "narration",
+    "source", "source_id", "source_url", "creator", "license",
+})
+_PROVENANCE_KEYS = ("source", "source_id", "source_url", "creator", "license")
 
 
 def _scene_error(position: int, scene_id: object, message: str) -> ValueError:
@@ -37,6 +41,15 @@ class SceneEntry:
     transition_duration: float = DEFAULT_TRANSITION_DURATION
     note: str = ""
     narration: str = ""
+    source: str = ""
+    source_id: str = ""
+    source_url: str = ""
+    creator: str = ""
+    license: str = ""
+
+    @property
+    def has_provenance(self) -> bool:
+        return bool(self.source or self.source_id or self.source_url or self.creator or self.license)
 
 
 @dataclass(frozen=True)
@@ -155,6 +168,12 @@ def load_scenes(path: str | Path) -> ScenePlan:
         narration = raw_scene.get("narration", "")
         if not isinstance(narration, str):
             raise _scene_error(index, scene_id, "'narration' precisa ser texto.")
+        provenance: dict[str, str] = {}
+        for key in _PROVENANCE_KEYS:
+            value = raw_scene.get(key, "")
+            if not isinstance(value, str):
+                raise _scene_error(index, scene_id, f"'{key}' precisa ser texto.")
+            provenance[key] = value
         entries.append(SceneEntry(
             id=scene_id,
             media=media,
@@ -163,6 +182,7 @@ def load_scenes(path: str | Path) -> ScenePlan:
             transition_duration=transition_duration,
             note=note,
             narration=narration,
+            **provenance,
         ))
     return ScenePlan(scenes=tuple(entries), title=title, wav=wav, metadata=metadata)
 
@@ -203,6 +223,10 @@ def _scene_payload(entry: SceneEntry) -> dict:
         scene["media"] = str(entry.media)
     if entry.narration:
         scene["narration"] = entry.narration
+    for key in _PROVENANCE_KEYS:
+        value = getattr(entry, key)
+        if value:
+            scene[key] = value
     return scene
 
 

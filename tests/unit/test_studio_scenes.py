@@ -283,3 +283,54 @@ def test_save_plan_roundtrips_planning_scenes_without_inventing_media(tmp_path):
     reloaded = load_scenes(path)
     assert reloaded.planning_count == 1
     assert scenes_to_items(reloaded) == [TimelineItem(plan.scenes[1].media, 2.0, "fade", 0.5)]
+
+
+def test_provenance_fields_default_to_empty_and_are_optional(tmp_path):
+    plan = load_scenes(write_plan(tmp_path, minimal_plan(tmp_path)))
+    entry = plan.scenes[0]
+    assert entry.source == ""
+    assert entry.source_id == ""
+    assert entry.source_url == ""
+    assert entry.creator == ""
+    assert entry.license == ""
+    assert entry.has_provenance is False
+
+
+def test_provenance_fields_load_and_roundtrip(tmp_path):
+    data = minimal_plan(tmp_path,
+        source="pexels", source_id="12345",
+        source_url="https://www.pexels.com/photo/12345/",
+        creator="Joey Farina",
+        license="Pexels License (free, no attribution required)")
+    plan = load_scenes(write_plan(tmp_path, data))
+    entry = plan.scenes[0]
+    assert entry.source == "pexels"
+    assert entry.source_id == "12345"
+    assert entry.source_url == "https://www.pexels.com/photo/12345/"
+    assert entry.creator == "Joey Farina"
+    assert entry.license == "Pexels License (free, no attribution required)"
+    assert entry.has_provenance is True
+    path = save_plan(tmp_path / "prov.json", plan)
+    reloaded = load_scenes(path)
+    assert reloaded.scenes[0].source == "pexels"
+    assert reloaded.scenes[0].creator == "Joey Farina"
+    assert reloaded.scenes[0].license == "Pexels License (free, no attribution required)"
+
+
+def test_provenance_non_string_is_rejected(tmp_path):
+    data = minimal_plan(tmp_path, source=5)
+    with pytest.raises(ValueError, match="'source' precisa ser texto"):
+        load_scenes(write_plan(tmp_path, data))
+
+
+def test_provenance_only_written_when_truthy(tmp_path):
+    entry = SceneEntry(id="c1", media=media_file(tmp_path, "x.png"), duration=2.0,
+                       source="wikimedia", creator="A. Author")
+    plan = ScenePlan(scenes=(entry,))
+    data = json.loads(save_plan(tmp_path / "p.json", plan).read_text(encoding="utf-8"))
+    scene = data["scenes"][0]
+    assert scene["source"] == "wikimedia"
+    assert scene["creator"] == "A. Author"
+    assert "source_id" not in scene
+    assert "source_url" not in scene
+    assert "license" not in scene
